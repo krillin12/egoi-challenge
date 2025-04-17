@@ -9,18 +9,20 @@ class Log extends Model
 {
     use HasFactory;
     public $timestamps = false;
-    // Define a tabela associada
+    
     protected $table = 'logs';
 
-    // Campos que podem ser preenchidos
+    
+    protected $primaryKey = 'id';
+
+   
     protected $fillable = [
         'user_email', 
         'description', 
         'at_time', 
-   
     ];
 
-    // Definir o relacionamento com o modelo User
+    
     public function user()
     {
         return $this->belongsTo(User::class);
