@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Log;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
@@ -25,18 +26,24 @@ class ProfileController extends Controller
      * Update the user's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
+{
+    $user = $request->user();
+    $user->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    if ($user->isDirty('email')) {
+        $user->email_verified_at = null;
     }
 
+    $user->save();
+
+    Log::create([
+        'user_email' => $user->email,
+        'description' => 'Profile updated',
+        'at_time' => now(),
+    ]);
+
+    return Redirect::route('profile.edit')->with('status', 'profile-updated');
+}
     /**
      * Delete the user's account.
      */
@@ -52,9 +59,20 @@ class ProfileController extends Controller
 
         $user->delete();
 
+        Log::create([
+            'user_email' => $user->email,
+            'description' => 'Profile deleted',
+            'at_time' => now(),
+        ]);
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
     }
+
+    public function findUserByEmail(string $email)
+{
+    return User::where('email', $email)->first();
+}
 }
